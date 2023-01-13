@@ -1,47 +1,31 @@
-import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import React, { useEffect } from "react";
+import { fetchPostsByTag, fetchTags, getAllPosts } from "../redux/slices/post";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Grid from "@mui/material/Grid";
-import { Post } from "../components/Post";
-import { TagsBlock } from "../components/TagsBlock";
-import { CommentsBlock } from "../components/CommentsBlock";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  fetchPostsNew,
-  fetchPostsPopular,
-  fetchTags,
-  getAllPosts,
-} from "../redux/slices/post";
-import { fetchCommentsNew, getAllComments } from "../redux/slices/comment";
+import { CommentsBlock, Post, TagsBlock } from "../components";
+import { useParams } from "react-router-dom";
 
-export const Home = () => {
+export const PostsForTag = () => {
+  const { tag } = useParams();
   const dispatch = useDispatch();
   const userData = useSelector((state) => state.auth.data);
-  const [typePosts, setTypePosts] = useState("new");
-  const { items, status } = useSelector(getAllComments());
-  const isLoadingComments = status === "loading";
   useEffect(() => {
-    typePosts === "new"
-      ? dispatch(fetchPostsNew())
-      : dispatch(fetchPostsPopular());
-    dispatch(fetchCommentsNew());
+    dispatch(fetchPostsByTag(tag));
     dispatch(fetchTags());
-  }, [typePosts, setTypePosts]);
+  }, []);
   const { posts, tags } = useSelector(getAllPosts());
   const isPostsLoading = posts.status === "loading";
   const isTagsLoading = tags.status === "loading";
-  const toggleTypePosts = () => {
-    setTypePosts((prevState) => (prevState === "new" ? "popular" : "new"));
-  };
   return (
     <>
       <Tabs
         style={{ marginBottom: 15 }}
-        value={typePosts === "new" ? 0 : 1}
+        value={0}
         aria-label="basic tabs example"
       >
-        <Tab label="Новые" onClick={toggleTypePosts} />
-        <Tab label="Популярные" onClick={toggleTypePosts} />
+        <Tab label={tag} />
       </Tabs>
       <Grid container spacing={4}>
         <Grid xs={8} item>
@@ -68,8 +52,23 @@ export const Home = () => {
         <Grid xs={4} item>
           <TagsBlock items={tags.items} isLoading={isTagsLoading} />
           <CommentsBlock
-            items={items.slice(-5)}
-            isLoading={isLoadingComments}
+            items={[
+              {
+                user: {
+                  fullName: "Вася Пупкин",
+                  avatarUrl: "https://mui.com/static/images/avatar/1.jpg",
+                },
+                text: "Это тестовый комментарий",
+              },
+              {
+                user: {
+                  fullName: "Иван Иванов",
+                  avatarUrl: "https://mui.com/static/images/avatar/2.jpg",
+                },
+                text: "When displaying three lines or more, the avatar is not aligned at the top. You should set the prop to align the avatar at the top",
+              },
+            ]}
+            isLoading={false}
           />
         </Grid>
       </Grid>
